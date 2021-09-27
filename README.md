@@ -16,3 +16,7 @@ In this project, we developed a web-Apllication for converting non-deterministic
           <a href="https://github.com/mdaines/viz.js" target="_blank">Viz.js</a>
           library.
         </li>
+
+## Changes
+
+Not applicable for NFA with lambda

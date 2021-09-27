@@ -170,20 +170,6 @@ $(document).ready(function () {
       )
     );
 
-    let step_div = $("#step-div");
-
-    step_div.empty();
-
-    for (let i = 0; i <= LAST_COMPLETED_STEP_COUNT; i++) {
-      step_div.append(
-        '<button class="btn btn-xs btn-outline-info" data-step-number="' +
-          (i + 1) +
-          '">Step ' +
-          (i + 1) +
-          "</button>"
-      );
-    }
-
     dotStr = dfa.toDotString();
     console.log('****', dotStr);
     d3.select("#current-dfa").graphviz().zoom(false).renderDot(dotStr);
@@ -212,8 +198,7 @@ $(document).ready(function () {
         user_input.states,
         user_input.alphabet,
         user_input.transitions
-      ),
-      step
+      )
     );
     let dotStr = dfa.toDotString();
 
