@@ -2,9 +2,11 @@ let LAST_COMPLETED_STEP_COUNT = 0;
 
 class Transition {
   constructor(state, nextStates, symbol) {
+    //if many states are entered as starting state
     if (!(typeof state === "string" || state instanceof String))
       throw new Error("Expected a single state (string)");
 
+    //if nextStates is not an array
     if (!Array.isArray(nextStates)) {
       console.warn("Expected nextStates in transition to be an array");
       let arr = [];
@@ -12,6 +14,8 @@ class Transition {
       nextStates = arr;
     }
 
+    //extra check
+    //not needed
     if (!(typeof symbol === "string" || symbol instanceof String))
       throw new Error("Expected a string symbol");
 
@@ -101,63 +105,11 @@ function lambdaClosureNFA(nfa) {
   return nfa;
 }
 
-function fetch_E_Closure(state, transitions) {
-  if (!(typeof state === "string" || state instanceof String))
-    throw new Error("Expected a single state input as a string");
-
-  if (!Array.isArray(transitions))
-    throw new Error("Expected transitions parameter to be an array");
-
-  let e_closure = [];
-  e_closure.push(state);
-  //console.log("--- Add to e_closure 1 ---");
-  //console.log(state);
-  //console.log("-----");
-
-  for (let i = 0; i < transitions.length; i++) {
-    let t = transitions[i];
-
-    // Lambda transition
-    if (t.symbol.trim() === "" || t.symbol.trim() === "\u03BB") {
-      // The transition is going from our state
-      if (state === t.state) {
-        if (!Array.isArray(t.nextStates))
-          throw new Error("Expected nextStates in NFA to be an array");
-
-        for (let j = 0; j < t.nextStates.length; j++) {
-          // See if the state is part of the closure
-          if (!e_closure.includes(t.nextStates[j])) {
-            // If not, add it to the closure
-            e_closure.push(t.nextStates[j]);
-            ///console.log("--- Add to e_closure 2 ---");
-            //console.log(t.nextStates[j]);
-            //console.log("-----");
-
-            // Then check the closure for the newly added state (recursive)
-            //console.log("RECURSIVE");
-            let sub_e_closure = fetch_E_Closure(t.nextStates[j], transitions);
-
-            for (let j = 0; j < sub_e_closure.length; j++) {
-              if (!e_closure.includes(sub_e_closure[j])) {
-                e_closure.push(sub_e_closure[j]);
-                //console.log("--- Add to e_closure 3 ---");
-                //console.log(sub_e_closure[j]);
-                //console.log("-----");
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return e_closure;
-}
-
 function generateDFA(nfa, step_counter_stop = -1) {
   let step_counter = 0;
   let step_interrupt = false;
 
+  //we couldn't do for lambda
   nfa = lambdaClosureNFA(nfa);
 
   let dfa_states = [];
@@ -169,13 +121,14 @@ function generateDFA(nfa, step_counter_stop = -1) {
   dfa_states.push(nfa.initialState);
   stack.push(nfa.initialState); // States we need to check/convert
 
+  //we start with starting vertex
   while (stack.length > 0) {
     let state = stack.pop();
     console.log("Pop'd state: " + state);
-    if (++step_counter === step_counter_stop) {
-      step_interrupt = true;
-      break;
-    }
+    // if (++step_counter === step_counter_stop) {
+    //   step_interrupt = true;
+    //   break;
+    // }
 
     let states;
 
@@ -190,6 +143,7 @@ function generateDFA(nfa, step_counter_stop = -1) {
       let next_states_union = [];
 
       for (let j = 0; j < states.length; j++) {
+        //ns contains all vertices where arrows from states[j] come using symbol nfa.alphabet[i]
         let ns = findNextStates(states[j], nfa.alphabet[i], nfa.transitions);
         //console.log("Next states for " + states[j] + ", " + nfa.alphabet[i] + " -> " + ns);
         for (let k = 0; k < ns.length; k++)
@@ -214,8 +168,10 @@ function generateDFA(nfa, step_counter_stop = -1) {
       } else {
         console.log("TRAP state needed");
 
+        //if trap is already not present
         if (!dfa_states.includes("TRAP")) {
           for (let n = 0; n < nfa.alphabet.length; n++)
+            //self-loop on trap
             dfa_transitions.push(
               new Transition("TRAP", ["TRAP"], nfa.alphabet[n])
             );
@@ -223,6 +179,7 @@ function generateDFA(nfa, step_counter_stop = -1) {
           dfa_states.push("TRAP");
         }
 
+        //we add trap here
         dfa_transitions.push(new Transition(state, ["TRAP"], nfa.alphabet[i]));
       }
     }
@@ -232,6 +189,7 @@ function generateDFA(nfa, step_counter_stop = -1) {
   console.log(nfa.finalStates);
   console.log("-----");
 
+  //for making terminal vertices
   for (let i = 0; i < dfa_states.length; i++) {
     let dfa_sep_states = separateStates(dfa_states[i]);
 
@@ -261,6 +219,7 @@ function generateDFA(nfa, step_counter_stop = -1) {
   );
 }
 
+//myhill-nerode theorem
 function minimizeDFA(dfa) {
   console.log("TIME TO MINIMIZE!");
 
@@ -295,8 +254,10 @@ function minimizeDFA(dfa) {
           //console.log("---");
 
           if (!arraysEqual(state1_nextStates, state2_nextStates)) {
+            console.log('++++', state, state1_nextStates, state2_nextStates, state2, '++++');
             statesEqual = false;
           }
+          else console.log('----', state, state1_nextStates, state2_nextStates, state2, '----');
         }
 
         if (statesEqual) {
@@ -358,6 +319,7 @@ function findNextStates(state, symbol, transitions) {
 
     if (t.state === state && t.symbol === symbol) {
       for (let j = 0; j < t.nextStates.length; j++) {
+        //if state is already present, then we won't push it
         if (!next_states.includes(t.nextStates[j])) {
           next_states.push(t.nextStates[j]);
         }
